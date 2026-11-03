@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">扫雷 TV</string>
+    <string name="btn_new_game">新游戏</string>
+    <string name="btn_difficulty">难度</string>
+    <string name="btn_leaderboard">排行榜</string>
+    <string name="mines_label">地雷</string>
+    <string name="timer_label">用时</string>
+    <string name="difficulty_normal">普通</string>
+    <string name="difficulty_hard">困难</string>
+    <string name="difficulty_crazy">疯狂</string>
+    <string name="dialog_choose_difficulty">选择难度</string>
+    <string name="dialog_cancel">取消</string>
+    <string name="dialog_ok">确定</string>
+    <string name="dialog_win_title">恭喜通关！</string>
+    <string name="dialog_lose_title">游戏失败</string>
+    <string name="dialog_play_again">再来一局</string>
+    <string name="dialog_close">关闭</string>
+    <string name="leaderboard_empty">暂无记录</string>
+    <string name="controls_hint">方向键移动 · 确定翻开 · 菜单/长按确定标记地雷</string>
+</resources>
