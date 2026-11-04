@@ -1,4 +1,4 @@
-package com.example.minesweeper
+package com.zcc.minesweeper
 
 import android.content.Context
 import android.graphics.Color
@@ -61,7 +61,7 @@ class DebugInputOverlay(context: Context) : LinearLayout(context) {
 
         val (dx, dy) = GamepadInput.direction(event)
         add("MOVE src=0x${event.source.toString(16)}")
-        add("dev ${shortDeviceName(event)}")
+        add("dev ${shortDeviceName(event.device)}")
         add(
             "hat=" + num(event.getAxisValue(MotionEvent.AXIS_HAT_X)) +
                 "," + num(event.getAxisValue(MotionEvent.AXIS_HAT_Y)) +

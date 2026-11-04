@@ -1,4 +1,4 @@
-package com.example.minesweeper
+package com.zcc.minesweeper
 
 import kotlin.random.Random
 

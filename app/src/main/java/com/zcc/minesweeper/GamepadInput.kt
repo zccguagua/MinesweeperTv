@@ -1,4 +1,4 @@
-package com.example.minesweeper
+package com.zcc.minesweeper
 
 import android.view.InputDevice
 import android.view.MotionEvent

@@ -1,4 +1,4 @@
-package com.example.minesweeper
+package com.zcc.minesweeper
 
 /**
  * A single cell on the board.

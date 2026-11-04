@@ -1,4 +1,4 @@
-package com.example.minesweeper
+package com.zcc.minesweeper
 
 /**
  * The three difficulty levels available in the game.

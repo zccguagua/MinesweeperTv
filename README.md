@@ -96,7 +96,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## 项目结构
 
 ```
-app/src/main/java/com/example/minesweeper/
+app/src/main/java/com/zcc/minesweeper/
 ├── MainActivity.kt       # 界面组装、计时、弹窗、输入分发
 ├── BoardView.kt          # 棋盘绘制 + 触屏/鼠标/遥控器/手柄输入
 ├── MinesweeperGame.kt    # 纯游戏逻辑：布雷、翻开、扩散、和弦、胜负判定

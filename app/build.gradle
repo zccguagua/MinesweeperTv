@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    namespace 'com.example.minesweeper'
+    namespace 'com.zcc.minesweeper'
     compileSdk 35
     buildToolsVersion "35.0.0"
 
     defaultConfig {
-        applicationId "com.example.minesweeper"
+        applicationId "com.zcc.minesweeper"
         minSdk 21
         targetSdk 35
         versionCode 1

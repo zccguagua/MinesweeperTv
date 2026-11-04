@@ -1,4 +1,4 @@
-package com.example.minesweeper
+package com.zcc.minesweeper
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -7,7 +7,6 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.os.SystemClock
 import android.util.TypedValue
 import android.view.Gravity
@@ -166,8 +165,9 @@ class MainActivity : Activity(), BoardView.Listener {
 
     /** Makes an alert dialog navigable with a gamepad d-pad/stick. */
     private fun AlertDialog.enableGamepadNavigation() {
-        val inner = window?.callback ?: return
-        window.callback = object : Window.Callback by inner {
+        val win = window ?: return
+        val inner = win.callback ?: return
+        win.callback = object : Window.Callback by inner {
             override fun dispatchKeyEvent(event: KeyEvent): Boolean {
                 if (inputDebugVisible) inputDebug.logKey(event)
                 return inner.dispatchKeyEvent(event)

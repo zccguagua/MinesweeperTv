@@ -1,4 +1,4 @@
-package com.example.minesweeper
+package com.zcc.minesweeper
 
 import android.content.Context
 import org.json.JSONArray
