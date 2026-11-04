@@ -3,7 +3,15 @@ package com.example.minesweeper
 import kotlin.random.Random
 
 /** Outcome of a [MinesweeperGame.reveal] call. */
-enum class RevealResult { OK, WON, LOST, IGNORED }
+enum class RevealResult {
+    /** Something was revealed. */
+    OK,
+    WON,
+    LOST,
+
+    /** Nothing happened, e.g. a flagged cell or a chord that does not apply. */
+    IGNORED
+}
 
 /**
  * Pure game logic with no Android dependencies.
@@ -61,11 +69,15 @@ class MinesweeperGame(
         return finishCheck()
     }
 
-    /** Toggle a flag. Returns true if the board changed. */
+    /**
+     * Toggle a flag. Returns true if the board changed. Like the original game,
+     * no more flags than mines can be placed.
+     */
     fun toggleFlag(col: Int, row: Int): Boolean {
         if (isOver) return false
         val cell = cellAt(col, row) ?: return false
         if (cell.isRevealed) return false
+        if (!cell.isFlagged && flagCount >= mineCount) return false
         cell.isFlagged = !cell.isFlagged
         flagCount += if (cell.isFlagged) 1 else -1
         return true
@@ -184,7 +196,7 @@ class MinesweeperGame(
 
     private fun chord(col: Int, row: Int): RevealResult {
         val cell = cellAt(col, row) ?: return RevealResult.IGNORED
-        if (!cell.isRevealed || cell.adjacentMines == 0) return RevealResult.OK
+        if (!cell.isRevealed || cell.adjacentMines == 0) return RevealResult.IGNORED
 
         val neighbours = mutableListOf<IntArray>()
         var flags = 0
@@ -199,7 +211,7 @@ class MinesweeperGame(
             }
         }
 
-        if (flags != cell.adjacentMines) return RevealResult.OK
+        if (flags != cell.adjacentMines) return RevealResult.IGNORED
 
         // A wrongly-placed flag means the chord is invalid and the player loses.
         for ((c, r) in neighbours) {

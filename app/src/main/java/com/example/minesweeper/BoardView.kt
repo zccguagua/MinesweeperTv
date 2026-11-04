@@ -5,6 +5,8 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
+import android.os.SystemClock
 import android.view.GestureDetector
 import android.view.InputDevice
 import android.view.KeyEvent
@@ -28,6 +30,9 @@ class BoardView(context: Context) : View(context) {
         fun onFlagChange()
         fun onGameWon()
         fun onGameLost()
+
+        /** Gamepad START: hand focus to the side panel so the buttons are reachable. */
+        fun onMenuRequested()
     }
 
     var listener: Listener? = null
@@ -50,6 +55,22 @@ class BoardView(context: Context) : View(context) {
     private val centerLongPress = Runnable {
         centerLongPressed = true
         performFlag(cursorCol, cursorRow)
+    }
+
+    // Gamepad state: direction currently held on the d-pad/stick, plus the time of
+    // the last cursor move caused by a DPAD_* key so the two paths can be told apart.
+    private var padDir = GamepadInput.NEUTRAL
+    private var lastKeyMoveTime = 0L
+
+    private val padRepeat = object : Runnable {
+        override fun run() {
+            if (padDir == GamepadInput.NEUTRAL) return
+            if (stepCursor(padDir.first, padDir.second)) {
+                postDelayed(this, GAMEPAD_REPEAT_MS)
+            } else {
+                padDir = GamepadInput.NEUTRAL
+            }
+        }
     }
 
     private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
@@ -127,9 +148,19 @@ class BoardView(context: Context) : View(context) {
         cursorCol = 0
         cursorRow = 0
         centerLongPressed = false
+        padDir = GamepadInput.NEUTRAL
         removeCallbacks(centerLongPress)
+        removeCallbacks(padRepeat)
         updateBoardMetrics()
         invalidate()
+    }
+
+    override fun onFocusChanged(gainFocus: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
+        if (!gainFocus) {
+            padDir = GamepadInput.NEUTRAL
+            removeCallbacks(padRepeat)
+        }
     }
 
     fun restart() = newGame(difficulty)
@@ -161,11 +192,17 @@ class BoardView(context: Context) : View(context) {
     }
 
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
+        if (GamepadInput.isGamepadSource(event.source)) {
+            return handleGamepadMotion(event)
+        }
         if (event.source and InputDevice.SOURCE_MOUSE == 0) {
             return super.onGenericMotionEvent(event)
         }
         when (event.actionMasked) {
             MotionEvent.ACTION_HOVER_MOVE -> {
+                // Mouse users don't move focus with a d-pad, so take focus here:
+                // the cursor highlight is only drawn while the board has it.
+                if (!hasFocus()) requestFocus()
                 cellAtPosition(event.x, event.y)?.let { (c, r) ->
                     if (c != cursorCol || r != cursorRow) {
                         cursorCol = c
@@ -176,6 +213,7 @@ class BoardView(context: Context) : View(context) {
                 return true
             }
             MotionEvent.ACTION_BUTTON_PRESS -> {
+                if (!hasFocus()) requestFocus()
                 val cell = cellAtPosition(event.x, event.y)
                 when (event.actionButton) {
                     MotionEvent.BUTTON_PRIMARY -> cell?.let { (c, r) -> performReveal(c, r) }
@@ -189,21 +227,43 @@ class BoardView(context: Context) : View(context) {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> return if (cursorRow > 0) {
-                cursorRow--; invalidate(); true
-            } else true
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                lastKeyMoveTime = SystemClock.uptimeMillis()
+                if (cursorRow > 0) {
+                    cursorRow--
+                    invalidate()
+                }
+                return true
+            }
 
-            KeyEvent.KEYCODE_DPAD_DOWN -> return if (cursorRow < game.rows - 1) {
-                cursorRow++; invalidate(); true
-            } else false // let focus move to the buttons below
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                lastKeyMoveTime = SystemClock.uptimeMillis()
+                if (cursorRow < game.rows - 1) {
+                    cursorRow++
+                    invalidate()
+                }
+                return true
+            }
 
-            KeyEvent.KEYCODE_DPAD_LEFT -> return if (cursorCol > 0) {
-                cursorCol--; invalidate(); true
-            } else true
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                lastKeyMoveTime = SystemClock.uptimeMillis()
+                if (cursorCol > 0) {
+                    cursorCol--
+                    invalidate()
+                }
+                return true
+            }
 
-            KeyEvent.KEYCODE_DPAD_RIGHT -> return if (cursorCol < game.cols - 1) {
-                cursorCol++; invalidate(); true
-            } else true
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                lastKeyMoveTime = SystemClock.uptimeMillis()
+                if (cursorCol < game.cols - 1) {
+                    cursorCol++
+                    invalidate()
+                    return true
+                }
+                // At the right edge let focus move to the side panel.
+                return false
+            }
 
             KeyEvent.KEYCODE_DPAD_CENTER -> {
                 if (event.repeatCount == 0) {
@@ -215,16 +275,23 @@ class BoardView(context: Context) : View(context) {
             }
 
             KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_BUTTON_A -> {
-                performReveal(cursorCol, cursorRow)
+                // Held buttons repeat on some pads; reveal once per press.
+                if (event.repeatCount == 0) performReveal(cursorCol, cursorRow)
                 return true
             }
 
             KeyEvent.KEYCODE_MENU,
             KeyEvent.KEYCODE_BUTTON_B,
             KeyEvent.KEYCODE_BUTTON_Y,
+            KeyEvent.KEYCODE_BUTTON_R1,
             KeyEvent.KEYCODE_PROG_RED,
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-                performFlag(cursorCol, cursorRow)
+                if (event.repeatCount == 0) performFlag(cursorCol, cursorRow)
+                return true
+            }
+
+            KeyEvent.KEYCODE_BUTTON_START -> {
+                if (event.repeatCount == 0) listener?.onMenuRequested()
                 return true
             }
         }
@@ -243,6 +310,64 @@ class BoardView(context: Context) : View(context) {
         return super.onKeyUp(keyCode, event)
     }
 
+    // --- Gamepad ----------------------------------------------------------
+
+    /**
+     * Xbox/PS style pads report the d-pad as hat axes and the left stick as X/Y
+     * axes, so directional input arrives here instead of as key events.
+     * Keyboard-style pads only send DPAD_* keys and never reach this method.
+     */
+    private fun handleGamepadMotion(event: MotionEvent): Boolean {
+        if (event.actionMasked != MotionEvent.ACTION_MOVE) return true
+
+        val dir = GamepadInput.direction(event)
+
+        // Some pads report the d-pad *both* as a hat axis and as DPAD_* keys.
+        // Ignore the axis while the key events are already driving the cursor.
+        if (dir != GamepadInput.NEUTRAL &&
+            SystemClock.uptimeMillis() - lastKeyMoveTime < GAMEPAD_KEY_DEDUPE_MS
+        ) {
+            return true
+        }
+
+        if (dir == padDir) return true
+
+        padDir = dir
+        removeCallbacks(padRepeat)
+        if (dir != GamepadInput.NEUTRAL) {
+            if (stepCursor(dir.first, dir.second)) {
+                postDelayed(padRepeat, GAMEPAD_REPEAT_MS)
+            } else {
+                padDir = GamepadInput.NEUTRAL
+            }
+        }
+        return true
+    }
+
+    /** Moves the cursor by one cell. Returns false when it hit the board edge. */
+    private fun stepCursor(dx: Int, dy: Int): Boolean {
+        if (dx != 0) {
+            val target = cursorCol + dx
+            if (target in 0 until game.cols) {
+                cursorCol = target
+                invalidate()
+                return true
+            }
+            // Mirror the remote: pressing right at the right edge focuses the panel.
+            if (dx > 0) focusSearch(View.FOCUS_RIGHT)?.requestFocus()
+            return false
+        }
+        if (dy != 0) {
+            val target = cursorRow + dy
+            if (target in 0 until game.rows) {
+                cursorRow = target
+                invalidate()
+                return true
+            }
+        }
+        return false
+    }
+
     // --- Actions ----------------------------------------------------------
 
     private fun performReveal(col: Int, row: Int) {
@@ -258,10 +383,13 @@ class BoardView(context: Context) : View(context) {
                 invalidate()
                 listener?.onGameWon()
             }
-            else -> {
+            RevealResult.OK -> {
                 invalidate()
                 listener?.onReveal()
             }
+            // Nothing changed (flagged cell, chord that does not apply): stay
+            // silent so the feedback is not misleading.
+            RevealResult.IGNORED -> Unit
         }
     }
 
@@ -417,6 +545,12 @@ class BoardView(context: Context) : View(context) {
         private const val COLOR_MINE = 0xFF101010.toInt()
         private const val COLOR_POLE = 0xFF5D4037.toInt()
         private const val COLOR_FLAG = 0xFFE53935.toInt()
+
+        /** Delay between cursor moves while a gamepad direction is held. */
+        private const val GAMEPAD_REPEAT_MS = 110L
+
+        /** Window in which hat-axis input is ignored because DPAD_* keys are arriving. */
+        private const val GAMEPAD_KEY_DEDUPE_MS = 120L
 
         private val NUMBER_COLORS = intArrayOf(
             0xFF0000FF.toInt(), // 1

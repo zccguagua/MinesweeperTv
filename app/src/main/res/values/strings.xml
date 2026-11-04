@@ -18,4 +18,6 @@
     <string name="dialog_close">关闭</string>
     <string name="leaderboard_empty">暂无记录</string>
     <string name="controls_hint">方向键移动 · 确定翻开 · 菜单/长按确定标记地雷</string>
+    <string name="controls_hint_gamepad">手柄：A 翻开 · B/R1 插旗 · START 菜单</string>
+    <string name="controls_hint_mouse">鼠标：左键翻开 · 右键插旗</string>
 </resources>
