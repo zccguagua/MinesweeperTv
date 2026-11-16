@@ -20,8 +20,8 @@ import kotlin.math.min
  *
  *  - Touch: tap to reveal, long-press to flag.
  *  - Mouse: left click to reveal, right click to flag, hover to move cursor.
- *  - Remote/gamepad: D-pad moves the cursor, OK/Enter reveals, and
- *    Menu/B/Y (or long-press OK) toggles a flag.
+ *  - Remote/gamepad: D-pad moves the cursor, OK/Enter/A/B reveals, and
+ *    Menu/X/Y (or long-press OK) toggles a flag.
  */
 class BoardView(context: Context) : View(context) {
 
@@ -274,14 +274,14 @@ class BoardView(context: Context) : View(context) {
                 return true
             }
 
-            KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_BUTTON_A -> {
+            KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B -> {
                 // Held buttons repeat on some pads; reveal once per press.
                 if (event.repeatCount == 0) performReveal(cursorCol, cursorRow)
                 return true
             }
 
             KeyEvent.KEYCODE_MENU,
-            KeyEvent.KEYCODE_BUTTON_B,
+            KeyEvent.KEYCODE_BUTTON_X,
             KeyEvent.KEYCODE_BUTTON_Y,
             KeyEvent.KEYCODE_BUTTON_R1,
             KeyEvent.KEYCODE_PROG_RED,

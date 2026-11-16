@@ -65,11 +65,14 @@
 | 按键 | 动作 |
 | --- | --- |
 | 十字键 / 左摇杆 | 移动光标（按住连续移动） |
-| A | 翻开 |
-| B / Y / R1 | 插旗 |
+| A / B | 翻开（A 同时能确认侧栏按钮和弹窗） |
+| X / Y | 插旗 |
+| R1 / 菜单键 | 插旗（备用） |
 | START | 焦点跳到右侧按钮区 |
 
 > 手柄的十字键在 Android 上是摇杆轴事件而非方向键事件，游戏内部会统一处理并把轴方向翻译成焦点导航，所以按钮和弹窗也能用手柄操作。
+>
+> A 在分发前会被改写成 `KEYCODE_ENTER`，因此除了翻开格子，也能确认侧栏按钮、难度列表和弹窗按钮。B 不做改写，因为它不只在棋盘上表示翻开，改成 BACK 会直接退出应用。若某个手柄把 B 上报成 `KEYCODE_BACK`，只会在棋盘上丢翻开能力，A 仍然可用。
 
 ### 触屏
 
@@ -103,7 +106,7 @@ app/src/main/java/com/zcc/minesweeper/
 ├── Cell.kt               # 单个格子的状态
 ├── Difficulty.kt         # 三个难度等级
 ├── LeaderboardStore.kt   # 排行榜持久化
-├── GamepadInput.kt       # 手柄轴事件 → 方向解析
+├── GamepadInput.kt       # 手柄轴事件 → 方向解析、来源判定、A→ENTER 改写
 ├── SoundPlayer.kt        # 音效播放（SoundPool）
 └── DebugInputOverlay.kt  # 临时输入调试面板
 

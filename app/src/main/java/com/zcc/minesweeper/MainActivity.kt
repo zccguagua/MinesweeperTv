@@ -100,7 +100,7 @@ class MainActivity : Activity(), BoardView.Listener {
             return true
         }
         if (inputDebugVisible) inputDebug.logKey(event)
-        return super.dispatchKeyEvent(event)
+        return super.dispatchKeyEvent(GamepadInput.remapKeyEvent(event))
     }
 
     private fun toggleInputDebug() {
@@ -170,7 +170,9 @@ class MainActivity : Activity(), BoardView.Listener {
         win.callback = object : Window.Callback by inner {
             override fun dispatchKeyEvent(event: KeyEvent): Boolean {
                 if (inputDebugVisible) inputDebug.logKey(event)
-                return inner.dispatchKeyEvent(event)
+                // Dialog lives in its own window, so it needs the same A -> ENTER
+                // remap the activity applies to its own window.
+                return inner.dispatchKeyEvent(GamepadInput.remapKeyEvent(event))
             }
 
             override fun dispatchGenericMotionEvent(ev: MotionEvent): Boolean {
@@ -284,7 +286,10 @@ class MainActivity : Activity(), BoardView.Listener {
 
         newGameButton = makeButton(getString(R.string.btn_new_game)) { startNewGame(difficulty) }
         sidePanel.addView(newGameButton, itemParams(top = 8))
-        sidePanel.addView(makeButton(getString(R.string.btn_difficulty)) { showDifficultyDialog() }, itemParams(top = 8))
+        sidePanel.addView(
+            makeButton(getString(R.string.btn_difficulty)) { showDifficultyDialog() },
+            itemParams(top = 8)
+        )
         sidePanel.addView(makeButton(getString(R.string.btn_leaderboard)) { showLeaderboard() }, itemParams(top = 8))
 
         root.addView(
@@ -324,16 +329,9 @@ class MainActivity : Activity(), BoardView.Listener {
         minHeight = dp(48)
         minWidth = dp(150)
         setPadding(dp(20), dp(8), dp(20), dp(8))
+        // Gamepad A arrives here as ENTER (GamepadInput.remapKeyEvent), which a
+        // stock Button already turns into a click.
         setOnClickListener { onClick() }
-        // Gamepad A does not click a focused button on its own.
-        setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_BUTTON_A) {
-                v.performClick()
-                true
-            } else {
-                false
-            }
-        }
     }
 
     // --- Game flow --------------------------------------------------------
@@ -458,7 +456,7 @@ class MainActivity : Activity(), BoardView.Listener {
         sounds.playLose()
         resultText.setTextColor(Color.parseColor(COLOR_LOSE))
         resultText.text = "💥 " + getString(R.string.dialog_lose_title) +
-            "\n用时 " + formatTime(elapsedSeconds)
+                "\n用时 " + formatTime(elapsedSeconds)
         val message = "难度：${difficulty.displayName}\n用时：${formatTime(elapsedSeconds)}"
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_lose_title))

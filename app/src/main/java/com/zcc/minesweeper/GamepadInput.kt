@@ -1,6 +1,7 @@
 package com.zcc.minesweeper
 
 import android.view.InputDevice
+import android.view.KeyEvent
 import android.view.MotionEvent
 import kotlin.math.abs
 
@@ -26,8 +27,38 @@ internal object GamepadInput {
     /** No direction held. */
     val NEUTRAL = 0 to 0
 
+    /**
+     * Real pads report `SOURCE_GAMEPAD | SOURCE_JOYSTICK`, so this has to test
+     * both bits: comparing `source and SOURCE_CLASS_MASK` against
+     * `SOURCE_CLASS_JOYSTICK` misses every combined source.
+     */
     fun isGamepadSource(source: Int): Boolean =
-        source and InputDevice.SOURCE_CLASS_MASK == InputDevice.SOURCE_CLASS_JOYSTICK
+        source and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD ||
+                source and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK
+
+    /**
+     * Re-labels the face buttons that stock widgets only understand under
+     * another key code, so that A also confirms focused buttons, dialog items
+     * and dialog buttons. The board treats ENTER exactly like A, so nothing
+     * changes there.
+     *
+     * B is left alone on purpose: the board uses it for reveal, and B mapped to
+     * BACK would leave the app instead of digging.
+     */
+    fun remapKeyEvent(event: KeyEvent): KeyEvent {
+        if (event.keyCode != KeyEvent.KEYCODE_BUTTON_A) return event
+        return KeyEvent(
+            event.downTime,
+            event.eventTime,
+            event.action,
+            KeyEvent.KEYCODE_ENTER,
+            event.repeatCount,
+            event.metaState,
+            event.deviceId,
+            event.scanCode,
+            event.flags,
+        )
+    }
 
     /**
      * Direction currently held, as (dx, dy) with -1/0/1 per axis. The d-pad wins
