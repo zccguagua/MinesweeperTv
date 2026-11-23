@@ -1,8 +1,11 @@
 package com.zcc.minesweeper
 
+import android.annotation.TargetApi
 import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.SoundPool
+import android.os.Build
 
 /**
  * Short sound effects for revealing, flagging, winning and losing.
@@ -13,15 +16,7 @@ import android.media.SoundPool
  */
 class SoundPlayer(context: Context) {
 
-    private val pool: SoundPool = SoundPool.Builder()
-        .setMaxStreams(MAX_STREAMS)
-        .setAudioAttributes(
-            AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_GAME)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-        )
-        .build()
+    private val pool: SoundPool = createPool()
 
     private val loadedIds = HashSet<Int>(8)
 
@@ -58,6 +53,32 @@ class SoundPlayer(context: Context) {
     fun release() {
         loadedIds.clear()
         pool.release()
+    }
+
+    /** SoundPool.Builder needs API 21, so API 19 keeps using the old constructor. */
+    private fun createPool(): SoundPool =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Lollipop.newPool()
+        } else {
+            @Suppress("DEPRECATION")
+            SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, 0)
+        }
+
+    /**
+     * Isolated in a nested object so that `SoundPool.Builder` / `AudioAttributes`
+     * are only resolved (and the class only loaded) on API 21 and newer.
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private object Lollipop {
+        fun newPool(): SoundPool = SoundPool.Builder()
+            .setMaxStreams(MAX_STREAMS)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            )
+            .build()
     }
 
     private companion object {

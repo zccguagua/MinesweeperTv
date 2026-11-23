@@ -64,15 +64,15 @@ class DebugInputOverlay(context: Context) : LinearLayout(context) {
         add("dev ${shortDeviceName(event.device)}")
         add(
             "hat=" + num(event.getAxisValue(MotionEvent.AXIS_HAT_X)) +
-                "," + num(event.getAxisValue(MotionEvent.AXIS_HAT_Y)) +
-                " xy=" + num(event.getAxisValue(MotionEvent.AXIS_X)) +
-                "," + num(event.getAxisValue(MotionEvent.AXIS_Y))
+                    "," + num(event.getAxisValue(MotionEvent.AXIS_HAT_Y)) +
+                    " xy=" + num(event.getAxisValue(MotionEvent.AXIS_X)) +
+                    "," + num(event.getAxisValue(MotionEvent.AXIS_Y))
         )
         add(
             "z=" + num(event.getAxisValue(MotionEvent.AXIS_Z)) +
-                " rz=" + num(event.getAxisValue(MotionEvent.AXIS_RZ)) +
-                " lt=" + num(event.getAxisValue(MotionEvent.AXIS_LTRIGGER)) +
-                " rt=" + num(event.getAxisValue(MotionEvent.AXIS_RTRIGGER))
+                    " rz=" + num(event.getAxisValue(MotionEvent.AXIS_RZ)) +
+                    " lt=" + num(event.getAxisValue(MotionEvent.AXIS_LTRIGGER)) +
+                    " rt=" + num(event.getAxisValue(MotionEvent.AXIS_RTRIGGER))
         )
         add("dir=($dx,$dy)")
     }
@@ -80,7 +80,7 @@ class DebugInputOverlay(context: Context) : LinearLayout(context) {
     /** Mouse hover and clicks, so left/right button mapping can be verified. */
     fun logMouse(event: MotionEvent) {
         if (event.actionMasked == MotionEvent.ACTION_BUTTON_PRESS) {
-            add("MOUSE ${buttonName(event.actionButton)}")
+            add("MOUSE ${buttonName(event.actionButtonCompat())}")
             add("at ${event.x.toInt()},${event.y.toInt()}")
             return
         }

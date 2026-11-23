@@ -212,10 +212,11 @@ class BoardView(context: Context) : View(context) {
                 }
                 return true
             }
+
             MotionEvent.ACTION_BUTTON_PRESS -> {
                 if (!hasFocus()) requestFocus()
                 val cell = cellAtPosition(event.x, event.y)
-                when (event.actionButton) {
+                when (event.actionButtonCompat()) {
                     MotionEvent.BUTTON_PRIMARY -> cell?.let { (c, r) -> performReveal(c, r) }
                     MotionEvent.BUTTON_SECONDARY -> cell?.let { (c, r) -> performFlag(c, r) }
                 }
@@ -378,11 +379,13 @@ class BoardView(context: Context) : View(context) {
                 invalidate()
                 listener?.onGameLost()
             }
+
             RevealResult.WON -> {
                 game.flagAllMines()
                 invalidate()
                 listener?.onGameWon()
             }
+
             RevealResult.OK -> {
                 invalidate()
                 listener?.onReveal()

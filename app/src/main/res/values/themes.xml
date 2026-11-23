@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Minesweeper" parent="android:Theme.Material.NoActionBar">
+    <!--
+      API 19（Android 4.4）基线主题：Theme.Material 是 API 21 才有的，
+      低版本会直接找不到父样式。21+ 用 values-v21 里的同名主题覆盖。
+    -->
+    <style name="Theme.Minesweeper" parent="android:Theme.Holo.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
-        <item name="android:colorPrimary">@color/primary</item>
-        <item name="android:colorAccent">@color/accent</item>
-        <item name="android:statusBarColor">@color/background</item>
-        <item name="android:navigationBarColor">@color/background</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
 </resources>

@@ -2,7 +2,7 @@
 
 一个为电视遥控器设计的扫雷游戏。横屏布局，棋盘铺满屏幕高度，用不完的宽度做成右侧信息栏；遥控器、鼠标、手柄、触屏都能玩。
 
-![难度](https://img.shields.io/badge/难度-3%20级-yellow) ![minSdk](https://img.shields.io/badge/minSdk-21-blue) ![license](https://img.shields.io/badge/依赖-无-green)
+![难度](https://img.shields.io/badge/难度-3%20级-yellow) ![minSdk](https://img.shields.io/badge/minSdk-19-blue) ![license](https://img.shields.io/badge/依赖-无-green)
 
 ## 界面布局
 
@@ -85,6 +85,7 @@
 - JDK 17
 - Android SDK 35（buildTools 35.0.0）
 - 首次构建需要联网下载 Gradle 8.9 与 AGP 8.7.3
+- 安装包最低支持 Android 4.4（API 19）
 
 ```bash
 # 组装 Debug APK
@@ -94,7 +95,11 @@
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-技术配置：`compileSdk 35` / `minSdk 21` / `targetSdk 35`，Kotlin 2.0.21，无第三方依赖（仅 `kotlin-stdlib`）。
+技术配置：`compileSdk 35` / `minSdk 19` / `targetSdk 35`，Kotlin 2.0.21，无第三方依赖（仅 `kotlin-stdlib`）。
+
+主题按 API 分段：`values`（Holo，API 19 基线）/ `values-v21`（Material）。图标同理：矢量图放在
+`drawable-anydpi-v21`（21+），`drawable-nodpi/ic_launcher.png` 是 <21 的回退（AGP 在 Release 构建里
+还会把矢量图自动栅格化成各密度 PNG）。
 
 ## 项目结构
 
@@ -107,11 +112,13 @@ app/src/main/java/com/zcc/minesweeper/
 ├── Difficulty.kt         # 三个难度等级
 ├── LeaderboardStore.kt   # 排行榜持久化
 ├── GamepadInput.kt       # 手柄轴事件 → 方向解析、来源判定、A→ENTER 改写
+├── MotionCompat.kt       # MotionEvent.getActionButton 的 API 19 兼容
 ├── SoundPlayer.kt        # 音效播放（SoundPool）
 └── DebugInputOverlay.kt  # 临时输入调试面板
 
 tools/
-└── generate_sfx.py     # 重新生成 res/raw 下的音效文件
+├── generate_sfx.py       # 重新生成 res/raw 下的音效文件
+└── generate_icon_png.py  # 重新生成 drawable-nodpi/ic_launcher.png（4.4 回退图标）
 ```
 
 `MinesweeperGame` 不依赖 Android，可单独测试。
